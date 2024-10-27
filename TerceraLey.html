@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Tercera Ley de Newton</title>
+    <style>
+        #canvasContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 1px solid black;
+        }
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+        #start, #reset{
+            position: absolute;
+            bottom: 10px;
+            padding: 10px 20px;
+        }
+        #start{
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #reset{
+            left: 70%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulación Tercera Ley de Newton</h1>
+    <div>
+        <label for="fuerzaAp">Fuerza Aplicada:</label>
+        <input type="number" id="fuerzaAp" value="5">
+    </div>
+    <div>
+        <label for="objetoX">Brazo:</label>
+        <input type="number" id="objetoX" value="5" readonly>
+    </div>
+    <div>
+        <label for="objetoY">Masa de Y:</label>
+        <input type="number" id="objetoY" value="10">
+    </div>
+    <div>
+        <label for="friccion">Fricción:</label>
+        <input type="number" id="friccion" value="0.3">
+    </div>  
+    <div id="canvasContainer">
+        <canvas id="canvas" width="800" height="600"></canvas>
+        <button id="start" onclick="simulacion()">Iniciar simulacion</button>
+        <button id="reset">Cargar</button>
+    </div>
+    <script src="tercera.js"></script>
+    <script>
+        let animacionId;
+        //const {calcularFuerzas} = require('./tercera.js');
+        function simulacion(){
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            //let objetoX = 5;
+            //let objetoY = 10;
+            //let friccion = 0.3;
+
+            let gravedad = 9.8;
+
+            const fuerzas = calcularFuerzas(objetoX, objetoY, fuerzaAp, friccion, gravedad);
+            
+            let posX = 195;
+            let posY = 250;
+            let velX = fuerzas.aplicarfuerzaNX / objetoX;
+            let velY = fuerzas.aplicarfuerzaNY / objetoY;
+
+            const imgFondo = new Image();
+            const imgObjetoX = new Image();
+            const imgObjetoY = new Image();
+            const imgFriccion = new Image();
+
+            imgFondo.src = 'fondo.jpg';
+            imgObjetoX.src = 'brazo.png';
+            imgObjetoY.src = 'caja2.png';
+            imgFriccion.src = 'mesa.png';
+
+            function dibujarEscena(fuerzas = {fuerzaX: 0, fuerzaY: 0, aplicarfuerzaNX: 0, aplicarfuerzaNY: 0}) {
+                //128
+//128
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(imgFondo, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(imgFriccion, 10,120, 900, 400);
+                ctx.drawImage(imgObjetoY, posX + 128, posY, 150, 150);
+                ctx.drawImage(imgObjetoX, posX, posY -50, 170, 170);
+                                
+                ctx.fillStyle = 'black';
+                ctx.font = '20px Arial';
+                //ctx.fillText(`Fuerza de friccion sobre X: ${fuerzas.fuerzaX}`,10,20 );
+                ctx.fillText(`Fuerza de friccion sobre la caja: ${fuerzas.fuerzaY}`,10,20 );
+                //ctx.fillText(`Fuerza neta sobre X: ${fuerzas.aplicarfuerzaNX}`,10,80 );
+                ctx.fillText(`Fuerza neta sobre la caja: ${fuerzas.aplicarfuerzaNY}`,10,40 );
+            }
+
+            imgFondo.onload = () => {
+                imgObjetoX.onload = () => {
+                    imgObjetoY.onload = () => {
+                        imgFriccion.onload = () => {
+                            dibujarEscena();
+                            function animacion() {
+                                //posX += velX * 0.1;
+                                posX += velX * 0.1;
+
+                                if (posX + 272 >= canvas.width || posX <= 0) {
+                                    velX = 0;
+                                }
+                                const fuerzaAp = parseFloat(document.getElementById('fuerzaAp').value) || 0;
+                                const objetoX = parseFloat(document.getElementById('objetoX').value) || 0;
+                                const objetoY = parseFloat(document.getElementById('objetoY').value) || 0;
+                                const friccion = parseFloat(document.getElementById('friccion').value) || 0;
+                                const fuerzas = calcularFuerzas(objetoX, objetoY, fuerzaAp,friccion, gravedad);
+                                dibujarEscena(fuerzas);
+                                animacionId = requestAnimationFrame(animacion);
+                            }
+                            document.getElementById(`start`).addEventListener('click', () => {
+                                if (!animacionId) {
+                                    const fuerzaAp = parseFloat(document.getElementById('fuerzaAp').value) || 0;
+                                    const objetoX = parseFloat(document.getElementById('objetoX').value) || 0;
+                                    const objetoY = parseFloat(document.getElementById('objetoY').value) || 0;
+                                    const friccion = parseFloat(document.getElementById('friccion').value) || 0;
+                                    if (isNaN(objetoX) || isNaN(objetoY) || isNaN(friccion) || isNaN(fuerzaAp)) {
+                                        alert('Los valores ingresados no son validos');
+                                        return;
+                                    }
+                                    const fuerzas = calcularFuerzas(objetoX, objetoY, fuerzaAp, friccion, gravedad);
+                                    velX = fuerzas.aplicarfuerzaNX / objetoX;
+                                    velY = fuerzas.aplicarfuerzaNY / objetoY;
+                                    animacion();
+                                }
+                            });
+
+                            document.getElementById(`reset`).addEventListener('click', () => {
+                                
+                                cancelAnimationFrame(animacionId);
+                                animacionId = null;
+                                posX = 230;
+                                posY = 250;
+                                const fuerzaAp = parseFloat(document.getElementById('fuerzaAp').value) || 0;
+                                const objetoX = parseFloat(document.getElementById('objetoX').value) || 0;
+                                const objetoY = parseFloat(document.getElementById('objetoY').value) || 0;
+                                const friccion = parseFloat(document.getElementById('friccion').value) || 0;
+                                if (isNaN(objetoX) || isNaN(objetoY) || isNaN(friccion) || isNaN(fuerzaAp)) {
+                                    alert('Los valores ingresados no son validos');
+                                    return;
+                                }
+                                velX = fuerzas.aplicarfuerzaNX / objetoX;
+                                velY = fuerzas.aplicarfuerzaNY / objetoY;
+                                dibujarEscena();
+                            });
+                            
+                        };
+                    };
+                };
+            };
+        }
+        simulacion();
+    </script>
+</body>
+</html>

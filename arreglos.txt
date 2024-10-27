@@ -1,0 +1,2 @@
+1. Que el movimiento no sea hacia la izquierda, con un mensaje de advertencia, no es logico
+2. Calcular y mostrar la aceleración 
